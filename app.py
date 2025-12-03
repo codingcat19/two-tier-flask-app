@@ -5,10 +5,10 @@ from flask_mysqldb import MySQL
 app = Flask(__name__)
 
 # Configure MySQL from environment variables
-app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'localhost')
-app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'default_user')
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'default_password')
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'default_db')
+app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'mysql')
+app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'flaskuser')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', 'flask_secure_pass456!')
+app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'flaskapp_db')
 
 # Initialize MySQL
 mysql = MySQL(app)
@@ -41,6 +41,18 @@ def submit():
     mysql.connection.commit()
     cur.close()
     return jsonify({'message': new_message})
+
+@app.route('/health')
+def health():
+    try:
+        with app.app_context():
+            cur = mysql.connection.cursor()
+            cur.execute('SELECT 1')  # Test MySQL connection
+            cur.close()
+        return 'OK', 200
+    except Exception as e:
+        print(f"Healthcheck failed: {e}")
+        return f'Unhealthy: {str(e)}', 503
 
 if __name__ == '__main__':
     init_db()
